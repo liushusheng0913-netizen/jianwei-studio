@@ -13,18 +13,19 @@ const records=[
 {title:'一处共同生长的地方',type:'学习空间 / 简维日常',img:'s14-1.jpg',gallery:['s14-1.jpg','s04-2.jpg'],text:'一张工作桌，也是一处相互学习的起点。简维工作室主要位于广东白云学院三立园负一层 U创长廊，欢迎对建筑与设计保持好奇的伙伴。',x:510,y:1060,w:300,h:255},
 {title:'2026，与简维相遇',type:'秋季招新 / 加入我们',img:'recruitment-poster.jpg',join:true,x:1380,y:550,w:210,h:330}
 ];
-const world=$('#world'),viewport=$('#viewport'),dialog=$('#detail');let active=0,tx=0,ty=0,baseX=0,baseY=0,followX=0,followY=0,targetFollowX=0,targetFollowY=0,list=false,down=null,moved=false,lastFocus,raf=0;const zoomScale=1.22;
+const world=$('#world'),viewport=$('#viewport'),dialog=$('#detail');let active=0,tx=0,ty=0,baseX=0,baseY=0,followX=0,followY=0,targetFollowX=0,targetFollowY=0,list=false,down=null,moved=false,lastFocus,raf=0;const zoomScale=1.36;
 records.forEach((r,i)=>{const b=document.createElement('button');b.className='tile';b.style.cssText=`left:${r.x}px;top:${r.y}px;width:${r.w}px;height:${r.h}px`;b.innerHTML=`<img src="assets/${r.img}" alt="${r.title}" draggable="false"><span class="tile-caption">${r.title}<small>${String(i+1).padStart(2,'0')}</small></span><span class="tile-type">${r.type}</span>`;b.onclick=()=>{if(!moved)r.join?showJoin():showRecord(i)};world.appendChild(b)});
 world.insertAdjacentHTML('beforeend','<div class="world-note" style="left:870px;top:170px">在这里，<br>让想法生长。</div><div class="world-note" style="left:1110px;top:1240px">建筑之外，<br>也是生活。</div>');
 function transform(){world.style.transform=`translate3d(${tx}px,${ty}px,0) scale(${zoomScale})`}function clamp(){const minX=viewport.clientWidth-2420*zoomScale,minY=viewport.clientHeight-1540*zoomScale;tx=Math.min(120,Math.max(minX,tx));ty=Math.min(130,Math.max(minY,ty))}function reset(){baseX=viewport.clientWidth/2-1100*zoomScale;baseY=viewport.clientHeight/2-570*zoomScale;followX=targetFollowX=0;followY=targetFollowY=0;tx=baseX;ty=baseY;clamp();transform()}
-function explore(){ $('#explore').classList.add('is-visible');$('#explore').scrollIntoView({behavior:'smooth',block:'start'});setTimeout(()=>{reset();viewport.focus({preventScroll:true})},650)}
-function home(){history.replaceState(null,'',location.pathname);window.scrollTo({top:0,behavior:'smooth'})}
+function explore(){ $('#home').hidden=true;$('#explore').hidden=false;$('#explore').classList.add('is-visible');reset();viewport.focus({preventScroll:true});history.replaceState(null,'','#explore')}
+function home(){ $('#home').hidden=false;$('#explore').hidden=true;history.replaceState(null,'',location.pathname);window.scrollTo(0,0)}
 $('.brand').onclick=e=>{e.preventDefault();home()};
 document.querySelectorAll('[data-action]').forEach(b=>b.onclick=()=>({explore,about:showAbout,join:showJoin})[b.dataset.action]());
-const revealObserver=new IntersectionObserver(entries=>entries.forEach(entry=>{if(entry.isIntersecting){entry.target.classList.add('is-visible');reset()}}),{threshold:.12});revealObserver.observe($('#explore'));
+if(location.hash==='#explore')explore();
 function animateFollow(){raf=0;followX+=(targetFollowX-followX)*.085;followY+=(targetFollowY-followY)*.085;tx=baseX+followX;ty=baseY+followY;clamp();transform();if(Math.abs(targetFollowX-followX)>0.2||Math.abs(targetFollowY-followY)>0.2)raf=requestAnimationFrame(animateFollow)}
-function followPointer(e){if(list||e.pointerType==='touch')return;const r=viewport.getBoundingClientRect();targetFollowX=((e.clientX-r.left)/r.width-.5)*250;targetFollowY=((e.clientY-r.top)/r.height-.5)*170;if(!raf)raf=requestAnimationFrame(animateFollow)}
+function followPointer(e){if(list||$('#explore').hidden||e.pointerType==='touch')return;const r=viewport.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom){targetFollowX=0;targetFollowY=0}else{targetFollowX=((e.clientX-r.left)/r.width-.5)*360;targetFollowY=((e.clientY-r.top)/r.height-.5)*240}if(!raf)raf=requestAnimationFrame(animateFollow)}
 viewport.addEventListener('pointermove',e=>{if(list)return;if(e.pointerType==='touch'){if(!down)return;const dx=e.clientX-down.x,dy=e.clientY-down.y;if(Math.hypot(dx,dy)>6){moved=true;viewport.classList.add('dragging');viewport.setPointerCapture(e.pointerId)}if(moved){tx=down.tx+dx;ty=down.ty+dy;clamp();transform()}}else followPointer(e)});
+window.addEventListener('mousemove',followPointer);
 viewport.addEventListener('pointerleave',()=>{targetFollowX=0;targetFollowY=0;if(!raf)raf=requestAnimationFrame(animateFollow)});
 viewport.addEventListener('pointerdown',e=>{if(list||e.pointerType!=='touch'||e.button!==0)return;down={x:e.clientX,y:e.clientY,tx,ty,id:e.pointerId};moved=false});
 function release(){down=null;viewport.classList.remove('dragging');setTimeout(()=>moved=false,80)}viewport.addEventListener('pointerup',release);viewport.addEventListener('pointercancel',release);
