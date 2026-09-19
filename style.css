@@ -14,4 +14,5 @@ html{scroll-behavior:smooth}
 .nav-note{font-size:14px;letter-spacing:1px;color:var(--muted);padding:10px 0}
 .enter{cursor:default;user-select:none}.enter:hover{color:inherit}.enter:hover .enter-arrow{background:transparent;color:inherit;transform:translateY(4px)}
 .explore{opacity:0;transform:translateY(7vh);filter:blur(4px);pointer-events:none;transition:opacity .9s ease,transform 1s cubic-bezier(.2,.65,.25,1),filter .9s ease}.explore.is-visible{opacity:1;transform:none;filter:none;pointer-events:auto}
+#viewport{cursor:crosshair}#viewport.dragging{cursor:grabbing}#world{transform-origin:0 0}
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}.explore{opacity:1;transform:none;filter:none;transition:none;pointer-events:auto}}
