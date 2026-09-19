@@ -17,10 +17,11 @@ const world=$('#world'),viewport=$('#viewport'),dialog=$('#detail');let active=0
 records.forEach((r,i)=>{const b=document.createElement('button');b.className='tile';b.style.cssText=`left:${r.x}px;top:${r.y}px;width:${r.w}px;height:${r.h}px`;b.innerHTML=`<img src="assets/${r.img}" alt="${r.title}" draggable="false"><span class="tile-caption">${r.title}<small>${String(i+1).padStart(2,'0')}</small></span><span class="tile-type">${r.type}</span>`;b.onclick=()=>{if(!moved)r.join?showJoin():showRecord(i)};world.appendChild(b)});
 world.insertAdjacentHTML('beforeend','<div class="world-note" style="left:870px;top:170px">在这里，<br>让想法生长。</div><div class="world-note" style="left:1110px;top:1240px">建筑之外，<br>也是生活。</div>');
 function transform(){world.style.transform=`translate3d(${tx}px,${ty}px,0)`}function clamp(){tx=Math.min(120,Math.max(viewport.clientWidth-2420,tx));ty=Math.min(130,Math.max(viewport.clientHeight-1540,ty))}function reset(){tx=viewport.clientWidth/2-1100;ty=viewport.clientHeight/2-570;clamp();transform()}
-function explore(){ $('#home').hidden=true;$('#explore').hidden=false;reset();viewport.focus({preventScroll:true})}
-function home(){ $('#home').hidden=false;$('#explore').hidden=true;history.replaceState(null,'',location.pathname);window.scrollTo(0,0)}
+function explore(){ $('#explore').classList.add('is-visible');$('#explore').scrollIntoView({behavior:'smooth',block:'start'});setTimeout(()=>{reset();viewport.focus({preventScroll:true})},650)}
+function home(){history.replaceState(null,'',location.pathname);window.scrollTo({top:0,behavior:'smooth'})}
 $('.brand').onclick=e=>{e.preventDefault();home()};
 document.querySelectorAll('[data-action]').forEach(b=>b.onclick=()=>({explore,about:showAbout,join:showJoin})[b.dataset.action]());
+const revealObserver=new IntersectionObserver(entries=>entries.forEach(entry=>{if(entry.isIntersecting){entry.target.classList.add('is-visible');reset()}}),{threshold:.12});revealObserver.observe($('#explore'));
 viewport.addEventListener('pointerdown',e=>{if(list||e.button!==0)return;down={x:e.clientX,y:e.clientY,tx,ty,id:e.pointerId};moved=false});
 viewport.addEventListener('pointermove',e=>{if(!down||list)return;const dx=e.clientX-down.x,dy=e.clientY-down.y;if(Math.hypot(dx,dy)>6){moved=true;viewport.classList.add('dragging');viewport.setPointerCapture(e.pointerId)}if(moved){tx=down.tx+dx;ty=down.ty+dy;clamp();transform()}});
 function release(){down=null;viewport.classList.remove('dragging');setTimeout(()=>moved=false,80)}viewport.addEventListener('pointerup',release);viewport.addEventListener('pointercancel',release);
