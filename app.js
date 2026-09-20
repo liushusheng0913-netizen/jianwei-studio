@@ -25,29 +25,32 @@ records.forEach((r,i)=>{
 });
 const tiles=[...world.querySelectorAll('.tile')];
 function layoutWorld(){
- const phone=mobile(),unit=phone?Math.min(1,viewport.clientWidth/390):Math.max(.85,Math.min(1.4,viewport.clientWidth/1440));
- const cellW=phone?350*unit:620*unit,cellH=phone?390*unit:500*unit;
- // Each item occupies a separate cell, including its full caption.
- layout=records.map((r,i)=>{
-   const col=i%4,row=Math.floor(i/4),w=(phone?Math.min(r.w,270):r.w*1.15)*unit;
-   const h=(phone?Math.min(r.h,300):r.h*1.15)*unit;
-   return {x:50*unit+col*cellW+(row%2?35:0)*unit,y:60*unit+row*cellH+(col%2?55:0)*unit,w,h};
- });
- world.style.width=`${4*cellW+100*unit}px`;world.style.height=`${3*cellH+150*unit}px`;
+ const phone=mobile(),unit=phone?viewport.clientWidth/630:viewport.clientWidth/1440;
+ // Art-directed positions: varied sizes and diagonals instead of rows.
+ const composition=[
+  [1420,1110,460,385],[2150,710,310,430],[490,1130,440,355],
+  [220,350,340,365],[2690,1430,330,450],[1180,1970,470,365],
+  [270,2290,380,320],[2580,2320,410,325],[810,240,330,380],
+  [2480,170,430,325],[200,1730,395,330],[1910,1910,290,490]
+ ];
+ layout=composition.map(([x,y,w,h])=>({x:x*unit,y:y*unit,w:w*unit,h:h*unit}));
+ world.style.width=`${3300*unit}px`;world.style.height=`${2850*unit}px`;
  tiles.forEach((t,i)=>{const r=layout[i];Object.assign(t.style,{left:r.x+'px',top:r.y+'px',width:r.w+'px',height:r.h+'px'})});
 }
 function limits(){return {x:Math.max(0,world.offsetWidth-viewport.clientWidth),y:Math.max(0,world.offsetHeight-viewport.clientHeight)}}
 function paint(){
  world.style.transform=`translate3d(${tx}px,${ty}px,0)`;
- layout.forEach((r,i)=>{const visible=tx+r.x+r.w>0&&tx+r.x<viewport.clientWidth&&ty+r.y+r.h>0&&ty+r.y<viewport.clientHeight;tiles[i].classList.toggle('is-visible',visible)});
+ layout.forEach((r,i)=>{const visibleWidth=Math.max(0,Math.min(tx+r.x+r.w,viewport.clientWidth)-Math.max(tx+r.x,0)),visibleHeight=Math.max(0,Math.min(ty+r.y+r.h,viewport.clientHeight)-Math.max(ty+r.y,0));tiles[i].classList.toggle('is-visible',visibleWidth*visibleHeight>r.w*r.h*.08)});
 }
 function stop(){cancelAnimationFrame(raf);raf=0}
-function animate(){
- const k=reduced()?1:.075;tx+=(targetX-tx)*k;ty+=(targetY-ty)*k;paint();
+let lastFrame=0;
+function animate(time){
+ const dt=lastFrame?Math.min(50,time-lastFrame):16.67;lastFrame=time;
+ const k=reduced()?1:1-Math.exp(-dt/310);tx+=(targetX-tx)*k;ty+=(targetY-ty)*k;paint();
  if(Math.abs(targetX-tx)+Math.abs(targetY-ty)>.2)raf=requestAnimationFrame(animate);else{tx=targetX;ty=targetY;paint();raf=0}
 }
-function move(x,y,smooth=true){const l=limits();targetX=Math.min(0,Math.max(-l.x,x));targetY=Math.min(0,Math.max(-l.y,y));stop();if(smooth)raf=requestAnimationFrame(animate);else{tx=targetX;ty=targetY;paint()}}
-function reset(){stop();layoutWorld();const r=layout[mobile()?0:5];move(viewport.clientWidth/2-r.x-r.w/2,viewport.clientHeight/2-r.y-r.h/2,false)}
+function move(x,y,smooth=true){const l=limits();targetX=Math.min(0,Math.max(-l.x,x));targetY=Math.min(0,Math.max(-l.y,y));if(smooth){if(!raf){lastFrame=0;raf=requestAnimationFrame(animate)}}else{stop();tx=targetX;ty=targetY;paint()}}
+function reset(){stop();layoutWorld();const r=layout[0];move(viewport.clientWidth/2-r.x-r.w/2,viewport.clientHeight/2-r.y-r.h/2,false)}
 function hint(){$('#canvas-hint').textContent=list?'点击图片，查看详情':mobile()?'滑动探索 · 轻点查看':'移动鼠标，发现更多';$('#view-toggle').textContent=list?'画布视图':'目录视图';$('#view-toggle').setAttribute('aria-pressed',String(list));$('#reset').hidden=list}
 function explore(){$('#home').hidden=true;$('#explore').hidden=false;document.body.classList.add('exploring');$('#explore').classList.add('is-visible');reset();hint();history.replaceState(null,'','#explore')}
 function home(){stop();$('#home').hidden=false;$('#explore').hidden=true;document.body.classList.remove('exploring');history.replaceState(null,'',location.pathname);window.scrollTo(0,0)}

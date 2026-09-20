@@ -91,3 +91,47 @@ header{height:88px;padding:20px 4%;border-bottom:0}.brand{gap:12px}.brand img{wi
  .hero h1{font-size:clamp(62px,16vw,110px)}
 }
 @media(prefers-reduced-motion:reduce){.tile{transition:none}}
+
+/* Recording reference: thin navigation, broad white field, diagonal picture composition. */
+.exploring{--paper:#fff;background:#fff}
+.exploring header{height:46px;padding:0 20px;border-bottom:1px solid #f4f4f4;background:white}
+.exploring .brand{position:absolute;left:50%;transform:translateX(-50%);gap:6px}
+.exploring .brand img{width:23px;height:22px}
+.exploring .brand span{font-size:12px;letter-spacing:1px}
+.exploring .brand small{display:none}
+.exploring nav{display:contents}
+.exploring nav button{position:absolute;font-size:10px;letter-spacing:.5px;min-height:40px}
+.exploring nav button:nth-child(1){left:20px}
+.exploring nav button:nth-child(2){left:100px}
+.exploring nav button:nth-child(3){right:20px}
+.exploring .explore{height:calc(100dvh - 46px)}
+#viewport{height:100%!important;cursor:default}
+.tile{transform:scale(.5);opacity:0;transition:opacity 1s cubic-bezier(.22,.61,.36,1),transform 1s cubic-bezier(.22,.61,.36,1)}
+.tile.is-visible{transform:scale(1);opacity:1}
+.tile img{object-fit:cover;height:calc(100% - 26px)}
+.tile .tile-caption{font-size:10px;letter-spacing:.3px;line-height:1.4;padding-top:7px}
+.tile .tile-caption small,.tile .tile-type{display:none}
+.canvas-footer{height:34px;background:transparent;bottom:10px;left:20px;right:20px;font-size:9px}
+.canvas-footer .archive-count{display:none}
+.canvas-footer button{font-size:9px;padding:8px;min-height:34px}
+.list .tile{transform:none;opacity:1}
+.list .tile img{object-fit:contain}
+.explore.list{height:calc(100dvh - 46px)}
+.list .canvas-footer{background:white}
+@media(max-width:760px){
+ .exploring header{height:54px;padding:0 12px}
+ .exploring .explore,.explore.list{height:calc(100dvh - 54px)}
+ .exploring .brand img{width:22px}
+ .exploring .brand span{font-size:11px}
+ .exploring nav button{font-size:10px}
+ .exploring nav button:nth-child(1){left:12px}
+ .exploring nav button:nth-child(2){left:65px}
+ .exploring nav button:nth-child(3){right:12px}
+ .exploring nav button:nth-child(1){display:none}
+ .exploring nav button:nth-child(2){left:12px}
+ .canvas-footer{bottom:env(safe-area-inset-bottom);height:44px;left:12px;right:12px;padding:0}
+ .canvas-footer button{min-height:44px;padding:10px}
+ .tile .tile-caption{font-size:11px}
+ .list .canvas-footer{bottom:0}
+}
+@media(prefers-reduced-motion:reduce){.tile{transition:none}}
