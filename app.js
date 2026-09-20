@@ -13,25 +13,66 @@ const records=[
 {title:'一处共同生长的地方',type:'学习空间 / 简维日常',img:'s14-1.jpg',gallery:['s14-1.jpg','s04-2.jpg'],text:'一张工作桌，也是一处相互学习的起点。简维工作室主要位于广东白云学院三立园负一层 U创长廊，欢迎对建筑与设计保持好奇的伙伴。',x:600,y:1500,w:300,h:255},
 {title:'2026，与简维相遇',type:'秋季招新 / 加入我们',img:'recruitment-poster.jpg',join:true,x:1900,y:700,w:210,h:330}
 ];
-const world=$('#world'),viewport=$('#viewport'),dialog=$('#detail');let active=0,tx=0,ty=0,baseX=0,baseY=0,followX=0,followY=0,targetFollowX=0,targetFollowY=0,pointerX=0,pointerY=0,list=false,down=null,moved=false,lastFocus,raf=0,boardScale=1;const zoomScale=1.36;
-records.forEach((r,i)=>{const b=document.createElement('button');b.className='tile';b.style.cssText=`left:${r.x}px;top:${r.y}px;width:${r.w}px;height:${r.h}px`;b.innerHTML=`<img src="assets/${r.img}" alt="${r.title}" draggable="false"><span class="tile-caption">${r.title}<small>${String(i+1).padStart(2,'0')}</small></span><span class="tile-type">${r.type}</span>`;b.onclick=()=>{if(!moved)r.join?showJoin():showRecord(i)};world.appendChild(b)});
-world.insertAdjacentHTML('beforeend','<div class="world-note" data-x="870" data-y="170">在这里，<br>让想法生长。</div><div class="world-note" data-x="1110" data-y="1240">建筑之外，<br>也是生活。</div>');
-function layoutWorld(){boardScale=Math.max(1,Math.min(1.35,viewport.clientWidth/1680));world.style.width=`${3300*boardScale}px`;world.style.height=`${2000*boardScale}px`;world.querySelectorAll('.tile').forEach((tile,i)=>{const r=records[i];tile.style.left=`${r.x*boardScale}px`;tile.style.top=`${r.y*boardScale}px`;tile.style.width=`${r.w*boardScale}px`;tile.style.height=`${r.h*boardScale}px`});world.querySelectorAll('.world-note').forEach(note=>{note.style.left=`${Number(note.dataset.x)*boardScale}px`;note.style.top=`${Number(note.dataset.y)*boardScale}px`})}
-function transform(){world.style.transform=`translate3d(${tx}px,${ty}px,0) scale(${zoomScale})`}function clamp(){const minX=viewport.clientWidth-world.offsetWidth*zoomScale,minY=viewport.clientHeight-world.offsetHeight*zoomScale;tx=Math.min(120,Math.max(minX,tx));ty=Math.min(130,Math.max(minY,ty))}function movementBounds(){return{x:Math.max(0,world.offsetWidth*zoomScale-viewport.clientWidth)*.6,y:Math.max(0,world.offsetHeight*zoomScale-viewport.clientHeight)*.55}}function updateTileReveal(){if(list)return;const vr=viewport.getBoundingClientRect(),margin=150;world.querySelectorAll('.tile').forEach(tile=>{const r=tile.getBoundingClientRect(),dx=Math.max(vr.left-r.right,r.left-vr.right,0),dy=Math.max(vr.top-r.bottom,r.top-vr.bottom,0),distance=Math.hypot(dx,dy),reveal=Math.max(0,Math.min(1,distance?1-distance/margin:1));tile.style.setProperty('--reveal',reveal.toFixed(3));tile.classList.toggle('is-visible',reveal>0)})}function reset(){layoutWorld();baseX=viewport.clientWidth/2-(world.offsetWidth/2)*zoomScale;baseY=viewport.clientHeight/2-(world.offsetHeight/2)*zoomScale;followX=targetFollowX=0;followY=targetFollowY=0;pointerX=viewport.clientWidth/2;pointerY=viewport.clientHeight/2;tx=baseX;ty=baseY;clamp();transform();updateTileReveal()}
-function explore(){ $('#home').hidden=true;$('#explore').hidden=false;$('#explore').classList.add('is-visible');reset();viewport.focus({preventScroll:true});history.replaceState(null,'','#explore')}
-function home(){ $('#home').hidden=false;$('#explore').hidden=true;history.replaceState(null,'',location.pathname);window.scrollTo(0,0)}
+const world=$('#world'),viewport=$('#viewport'),dialog=$('#detail');
+let active=0,tx=0,ty=0,targetX=0,targetY=0,list=false,down=null,moved=false,lastFocus,raf=0,layout=[];
+const mobile=()=>matchMedia('(max-width:760px)').matches;
+const reduced=()=>matchMedia('(prefers-reduced-motion:reduce)').matches;
+records.forEach((r,i)=>{
+ const b=document.createElement('button');b.className='tile';
+ b.innerHTML=`<img src="assets/${r.img}" alt="${r.title}" draggable="false"><span class="tile-caption">${r.title}<small>${String(i+1).padStart(2,'0')}</small></span><span class="tile-type">${r.type}</span>`;
+ b.onclick=()=>{if(!moved)r.join?showJoin():showRecord(i)};
+ world.appendChild(b);
+});
+const tiles=[...world.querySelectorAll('.tile')];
+function layoutWorld(){
+ const phone=mobile(),unit=phone?Math.min(1,viewport.clientWidth/390):Math.max(.85,Math.min(1.4,viewport.clientWidth/1440));
+ const cellW=phone?350*unit:620*unit,cellH=phone?390*unit:500*unit;
+ // Each item occupies a separate cell, including its full caption.
+ layout=records.map((r,i)=>{
+   const col=i%4,row=Math.floor(i/4),w=(phone?Math.min(r.w,270):r.w*1.15)*unit;
+   const h=(phone?Math.min(r.h,300):r.h*1.15)*unit;
+   return {x:50*unit+col*cellW+(row%2?35:0)*unit,y:60*unit+row*cellH+(col%2?55:0)*unit,w,h};
+ });
+ world.style.width=`${4*cellW+100*unit}px`;world.style.height=`${3*cellH+150*unit}px`;
+ tiles.forEach((t,i)=>{const r=layout[i];Object.assign(t.style,{left:r.x+'px',top:r.y+'px',width:r.w+'px',height:r.h+'px'})});
+}
+function limits(){return {x:Math.max(0,world.offsetWidth-viewport.clientWidth),y:Math.max(0,world.offsetHeight-viewport.clientHeight)}}
+function paint(){
+ world.style.transform=`translate3d(${tx}px,${ty}px,0)`;
+ layout.forEach((r,i)=>{const visible=tx+r.x+r.w>0&&tx+r.x<viewport.clientWidth&&ty+r.y+r.h>0&&ty+r.y<viewport.clientHeight;tiles[i].classList.toggle('is-visible',visible)});
+}
+function stop(){cancelAnimationFrame(raf);raf=0}
+function animate(){
+ const k=reduced()?1:.075;tx+=(targetX-tx)*k;ty+=(targetY-ty)*k;paint();
+ if(Math.abs(targetX-tx)+Math.abs(targetY-ty)>.2)raf=requestAnimationFrame(animate);else{tx=targetX;ty=targetY;paint();raf=0}
+}
+function move(x,y,smooth=true){const l=limits();targetX=Math.min(0,Math.max(-l.x,x));targetY=Math.min(0,Math.max(-l.y,y));stop();if(smooth)raf=requestAnimationFrame(animate);else{tx=targetX;ty=targetY;paint()}}
+function reset(){stop();layoutWorld();const r=layout[mobile()?0:5];move(viewport.clientWidth/2-r.x-r.w/2,viewport.clientHeight/2-r.y-r.h/2,false)}
+function hint(){$('#canvas-hint').textContent=list?'点击图片，查看详情':mobile()?'滑动探索 · 轻点查看':'移动鼠标，发现更多';$('#view-toggle').textContent=list?'画布视图':'目录视图';$('#view-toggle').setAttribute('aria-pressed',String(list));$('#reset').hidden=list}
+function explore(){$('#home').hidden=true;$('#explore').hidden=false;document.body.classList.add('exploring');$('#explore').classList.add('is-visible');reset();hint();history.replaceState(null,'','#explore')}
+function home(){stop();$('#home').hidden=false;$('#explore').hidden=true;document.body.classList.remove('exploring');history.replaceState(null,'',location.pathname);window.scrollTo(0,0)}
 $('.brand').onclick=e=>{e.preventDefault();home()};
 document.querySelectorAll('[data-action]').forEach(b=>b.onclick=()=>({explore,about:showAbout,join:showJoin})[b.dataset.action]());
+viewport.addEventListener('pointerdown',e=>{if(list||e.pointerType==='mouse')return;stop();moved=false;down={x:e.clientX,y:e.clientY,tx,ty};});
+viewport.addEventListener('pointermove',e=>{
+ if(list||dialog.open)return;
+ if(e.pointerType!=='mouse'){
+  if(!down)return;const dx=e.clientX-down.x,dy=e.clientY-down.y;
+  if(Math.hypot(dx,dy)>8){moved=true;viewport.setPointerCapture(e.pointerId)}
+  if(moved)move(down.tx+dx,down.ty+dy,false);
+ }else if(!mobile()){
+  const r=viewport.getBoundingClientRect(),l=limits();
+  move(-(e.clientX-r.left)/r.width*l.x,-(e.clientY-r.top)/r.height*l.y);
+ }
+});
+function release(){down=null;setTimeout(()=>moved=false,120)}
+viewport.addEventListener('pointerup',release);viewport.addEventListener('pointercancel',release);
+viewport.addEventListener('keydown',e=>{if(list)return;const d={ArrowLeft:[100,0],ArrowRight:[-100,0],ArrowUp:[0,100],ArrowDown:[0,-100]}[e.key];if(d){e.preventDefault();move(tx+d[0],ty+d[1])}});
+world.addEventListener('focusin',e=>{if(list||!e.target.matches(':focus-visible'))return;const r=layout[tiles.indexOf(e.target)];if(r)move(viewport.clientWidth/2-r.x-r.w/2,viewport.clientHeight/2-r.y-r.h/2,false)});
+$('#reset').onclick=reset;
+$('#view-toggle').onclick=()=>{stop();list=!list;$('#explore').classList.toggle('list',list);hint();if(!list)reset()};
+window.addEventListener('resize',()=>{if(!$('#explore').hidden){if(!list)reset();hint()}});
 if(location.hash==='#explore')explore();
-function animateFollow(){raf=0;followX+=(targetFollowX-followX)*.085;followY+=(targetFollowY-followY)*.085;tx=baseX+followX;ty=baseY+followY;clamp();transform();updateTileReveal();if(Math.abs(targetFollowX-followX)>0.2||Math.abs(targetFollowY-followY)>0.2)raf=requestAnimationFrame(animateFollow)}
-function followPointer(e){if(list||$('#explore').hidden||e.pointerType==='touch')return;const r=viewport.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)return;pointerX=e.clientX-r.left;pointerY=e.clientY-r.top;const bounds=movementBounds(),nx=(pointerX-r.width/2)/(r.width/2),ny=(pointerY-r.height/2)/(r.height/2);targetFollowX=-Math.max(-1,Math.min(1,nx))*bounds.x;targetFollowY=-Math.max(-1,Math.min(1,ny))*bounds.y;if(!raf)raf=requestAnimationFrame(animateFollow)}
-viewport.addEventListener('pointermove',e=>{if(list)return;if(e.pointerType==='touch'){if(!down)return;const dx=e.clientX-down.x,dy=e.clientY-down.y;if(Math.hypot(dx,dy)>6){moved=true;viewport.classList.add('dragging');viewport.setPointerCapture(e.pointerId)}if(moved){tx=down.tx+dx;ty=down.ty+dy;clamp();transform();updateTileReveal()}}else followPointer(e)});
-window.addEventListener('mousemove',followPointer);
-viewport.addEventListener('pointerdown',e=>{if(list||e.pointerType!=='touch'||e.button!==0)return;down={x:e.clientX,y:e.clientY,tx,ty,id:e.pointerId};moved=false});
-function release(){down=null;viewport.classList.remove('dragging');setTimeout(()=>moved=false,80)}viewport.addEventListener('pointerup',release);viewport.addEventListener('pointercancel',release);
-viewport.addEventListener('keydown',e=>{if(list)return;const steps={ArrowLeft:[80,0],ArrowRight:[-80,0],ArrowUp:[0,80],ArrowDown:[0,-80]};if(steps[e.key]){e.preventDefault();tx+=steps[e.key][0];ty+=steps[e.key][1];clamp();transform()}});
-world.addEventListener('focusin',e=>{if(list||!e.target.matches(':focus-visible'))return;const i=[...world.querySelectorAll('.tile')].indexOf(e.target);if(i<0)return;const r=records[i];baseX=viewport.clientWidth/2-(r.x+r.w/2)*zoomScale;baseY=viewport.clientHeight/2-(r.y+r.h/2)*zoomScale;followX=targetFollowX=0;tx=baseX;ty=baseY;clamp();transform()});
-$('#reset').onclick=reset;$('#view-toggle').onclick=()=>{list=!list;$('#explore').classList.toggle('list',list);$('#view-toggle').textContent=list?'画布视图':'目录视图';$('#view-toggle').setAttribute('aria-pressed',String(list));$('#canvas-hint').textContent=list?'点击条目，阅读完整故事':'移动鼠标，发现更多 ↔';$('#reset').hidden=list;if(!list)reset()};window.addEventListener('resize',()=>{if(!$('#explore').hidden&&!list)reset()});
 function open(content){if(!dialog.open)lastFocus=document.activeElement;$('#detail-content').innerHTML=content;if(!dialog.open)dialog.showModal();dialog.scrollTop=0;$('.close').focus()}
 function close(){dialog.close();lastFocus?.focus({preventScroll:true})}$('.close').onclick=close;dialog.addEventListener('click',e=>{if(e.target===dialog){const r=dialog.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)close()}});
 function showRecord(i){active=i;const r=records[i];open(`<article class="detail-inner"><p class="eyebrow">JIANWEI ARCHIVE / ${String(i+1).padStart(2,'0')}</p><h2 id="detail-title">${r.title}</h2><p class="detail-meta">${r.type}</p><p class="detail-text">${r.text}</p>${r.note?`<p class="detail-meta">${r.note}</p>`:''}<div class="detail-gallery">${r.gallery.map(im=>`<img src="assets/${im}" alt="${r.title} · 资料图" loading="lazy">`).join('')}</div><p class="detail-meta">图片来源：简维工作室 2026 秋季宣传资料</p><div class="detail-bottom"><button onclick="document.querySelector('.close').click()">返回探索</button><button id="next-record">下一个故事 ↗</button></div></article>`);$('#next-record').onclick=()=>{let n=(active+1)%records.length;records[n].join?showJoin():showRecord(n)}}

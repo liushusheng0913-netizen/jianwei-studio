@@ -53,3 +53,41 @@ header{height:88px;padding:20px 4%;border-bottom:0}.brand{gap:12px}.brand img{wi
   nav button{font-size:10px}
   .explore-heading{left:5%;top:14px}
 }
+
+/* Archive layout revision: independent image cells and a full-height touch viewport. */
+.exploring{overflow:hidden}
+.exploring header{height:64px;padding:12px 3%}
+.exploring .brand img{width:38px;height:34px}
+.exploring .brand span{font-size:13px}
+.exploring .brand small{font-size:7px}
+.exploring .explore{height:calc(100dvh - 64px);transform:none;filter:none}
+.explore-heading,.world-note{display:none!important}
+#viewport{height:calc(100% - 48px)!important;position:relative}
+.tile{opacity:0;transform:scale(.82);transition:opacity .65s ease,transform .85s cubic-bezier(.2,.65,.25,1)}
+.tile.is-visible{opacity:1;transform:scale(1)}
+.tile img{height:calc(100% - 56px);filter:none;object-fit:contain}
+.tile:hover img{transform:none}
+.tile .tile-caption{font-size:12px;line-height:1.5;padding-top:9px}
+.tile .tile-type{font-size:10px;line-height:1.5}
+.canvas-footer{height:48px;background:var(--paper);left:3%;right:3%}
+.canvas-footer button{min-height:40px}
+.explore.list{overflow-y:auto;height:calc(100dvh - 64px);padding-top:20px}
+.explore.list #viewport{height:auto!important;padding-bottom:90px}
+.list .tile{opacity:1;transform:none;pointer-events:auto}
+@media(max-width:760px){
+ .exploring header{height:64px;padding:10px 16px}
+ .exploring .brand span{font-size:12px;letter-spacing:1px}
+ .exploring .brand img{width:32px}
+ nav button{min-height:40px;font-size:11px}
+ .canvas-footer{left:16px;right:16px;height:calc(48px + env(safe-area-inset-bottom));padding-bottom:env(safe-area-inset-bottom)}
+ #viewport{height:calc(100% - 48px - env(safe-area-inset-bottom))!important}
+ .list #world{grid-template-columns:1fr;gap:35px}
+ .list .tile{height:320px!important}
+ dialog{width:100%;max-width:100%;max-height:100dvh;height:100dvh;margin:0}
+ .close{min-height:44px;top:8px}
+ .detail-inner{padding:0 22px 48px}
+ .qr-frame{max-width:calc(100% - 28px)}
+ .home{padding-top:90px}
+ .hero h1{font-size:clamp(62px,16vw,110px)}
+}
+@media(prefers-reduced-motion:reduce){.tile{transition:none}}
