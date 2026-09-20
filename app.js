@@ -3,7 +3,7 @@ const records=window.STUDIO_ARCHIVE;
 const world=$('#world'),viewport=$('#viewport'),dialog=$('#detail');
 let active=0,tx=0,ty=0,targetX=0,targetY=0,list=false,moved=false,lastFocus,raf=0,layout=[],category='全部',lastFrame=0;
 const mobile=()=>matchMedia('(max-width:760px), (pointer:coarse)').matches;
-const reading=()=>mobile()||list;
+const reading=()=>list;
 const reduced=()=>matchMedia('(prefers-reduced-motion:reduce)').matches;
 records.forEach((r,i)=>{
  const b=document.createElement('button');b.className='tile';b.dataset.theme=r.type;
@@ -21,7 +21,7 @@ const placements=[
  [820,100,420,320], [170,1390,450,350], [1770,1460,290,470]
 ];
 function layoutWorld(){
- const ids=selected(),unit=Math.max(.7,viewport.clientWidth/1440);
+ const ids=selected(),unit=mobile()?Math.max(.38,Math.min(.65,viewport.clientWidth/800)):Math.max(.7,viewport.clientWidth/1440);
  layout=[];tiles.forEach((t,i)=>{t.hidden=!ids.includes(i)});
  ids.forEach((i,n)=>{
   const [x,y,w,h]=category==='全部'?placements[i]:[[160,170,460,390],[810,440,480,410],[1460,120,420,400]][n];
@@ -42,7 +42,7 @@ function reset(){stop();layoutWorld();if(!reading()){const r=layout[selected()[0
 function sync(){
  $('#explore').classList.toggle('reading',reading());document.body.classList.toggle('canvas-mode',!$('#explore').hidden&&!reading());
  $('#view-toggle').textContent=list?'自由探索':'目录浏览';$('#view-toggle').setAttribute('aria-pressed',String(list));
- $('#canvas-hint').textContent=reading()?'选择主题，阅读完整内容':'移动鼠标探索 · 点击主题阅读';
+ $('#canvas-hint').textContent=reading()?'选择主题，阅读完整内容':(mobile()?'拖动探索 · 点击主题阅读':'移动鼠标探索 · 点击主题阅读');
  $('#theme-count').textContent=`${selected().length} 个主题`;$('#reset').hidden=reading();reset();
 }
 function explore(){$('#home').hidden=true;$('#explore').hidden=false;document.body.classList.add('exploring');sync();history.replaceState(null,'','#explore')}
@@ -51,6 +51,33 @@ $('.brand').onclick=e=>{e.preventDefault();home()};
 document.querySelectorAll('[data-action]').forEach(b=>b.onclick=()=>({explore,about:showAbout,join:showJoin})[b.dataset.action]());
 document.querySelectorAll('[data-category]').forEach(b=>b.onclick=()=>{category=b.dataset.category;document.querySelectorAll('[data-category]').forEach(t=>t.setAttribute('aria-pressed',String(t===b)));sync()});
 viewport.addEventListener('pointermove',e=>{if(reading()||dialog.open||e.pointerType!=='mouse')return;const r=viewport.getBoundingClientRect(),l=limits();const px=Math.max(0,Math.min(1,(e.clientX-r.left-r.width*.04)/(r.width*.92))),py=Math.max(0,Math.min(1,(e.clientY-r.top-r.height*.04)/(r.height*.92)));move(-px*l.x,-py*l.y)});
+// Touch pans the same artboard; a drag must never open a story accidentally.
+let gesture=null,suppressClickUntil=0;
+viewport.addEventListener('pointerdown',e=>{
+ if(reading()||dialog.open||e.pointerType==='mouse')return;
+ stop();targetX=tx;targetY=ty;
+ gesture={id:e.pointerId,x:e.clientX,y:e.clientY,lastX:e.clientX,lastY:e.clientY,time:performance.now(),vx:0,vy:0,drag:false};
+});
+viewport.addEventListener('pointermove',e=>{
+ if(!gesture||e.pointerId!==gesture.id)return;
+ const g=gesture,now=performance.now(),dt=Math.max(8,now-g.time);
+ if(!g.drag&&Math.hypot(e.clientX-g.x,e.clientY-g.y)>7){g.drag=true;viewport.setPointerCapture(e.pointerId)}
+ if(g.drag){e.preventDefault();g.vx=(e.clientX-g.lastX)/dt;g.vy=(e.clientY-g.lastY)/dt;move(tx+e.clientX-g.lastX,ty+e.clientY-g.lastY,false)}
+ g.lastX=e.clientX;g.lastY=e.clientY;g.time=now;
+});
+function finishGesture(e){
+ if(!gesture||e.pointerId!==gesture.id)return;
+ const g=gesture;gesture=null;
+ if(g.drag){suppressClickUntil=performance.now()+400;if(e.type!=='pointercancel'&&performance.now()-g.time<100)move(tx+Math.max(-160,Math.min(160,g.vx*140)),ty+Math.max(-160,Math.min(160,g.vy*140)))}
+ if(viewport.hasPointerCapture(e.pointerId))viewport.releasePointerCapture(e.pointerId);
+}
+viewport.addEventListener('pointerup',finishGesture);viewport.addEventListener('pointercancel',finishGesture);
+viewport.addEventListener('click',e=>{if(performance.now()<suppressClickUntil){e.preventDefault();e.stopImmediatePropagation()}},true);
+const menuButton=document.createElement('button');menuButton.className='menu-toggle';menuButton.textContent='菜单';menuButton.setAttribute('aria-expanded','false');menuButton.setAttribute('aria-controls','main-nav');
+$('nav').id='main-nav';$('header').appendChild(menuButton);
+function closeMenu(){document.body.classList.remove('menu-open');menuButton.setAttribute('aria-expanded','false');menuButton.textContent='菜单'}
+menuButton.onclick=()=>{const opened=document.body.classList.toggle('menu-open');menuButton.setAttribute('aria-expanded',String(opened));menuButton.textContent=opened?'关闭':'菜单'};
+$('nav').addEventListener('click',closeMenu);$('.brand').addEventListener('click',closeMenu);document.addEventListener('keydown',e=>{if(e.key==='Escape')closeMenu()});
 viewport.addEventListener('keydown',e=>{if(reading())return;const d={ArrowLeft:[100,0],ArrowRight:[-100,0],ArrowUp:[0,100],ArrowDown:[0,-100]}[e.key];if(d){e.preventDefault();move(tx+d[0],ty+d[1])}});
 world.addEventListener('focusin',e=>{if(reading()||!e.target.matches(':focus-visible'))return;const r=layout[tiles.indexOf(e.target)];if(r)move(viewport.clientWidth/2-r.x-r.w/2,viewport.clientHeight/2-r.y-r.h/2,false)});
 $('#reset').onclick=reset;$('#view-toggle').onclick=()=>{list=!list;sync()};
