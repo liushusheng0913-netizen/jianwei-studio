@@ -73,11 +73,6 @@ function finishGesture(e){
 }
 viewport.addEventListener('pointerup',finishGesture);viewport.addEventListener('pointercancel',finishGesture);
 viewport.addEventListener('click',e=>{if(performance.now()<suppressClickUntil){e.preventDefault();e.stopImmediatePropagation()}},true);
-const menuButton=document.createElement('button');menuButton.className='menu-toggle';menuButton.textContent='菜单';menuButton.setAttribute('aria-expanded','false');menuButton.setAttribute('aria-controls','main-nav');
-$('nav').id='main-nav';$('header').appendChild(menuButton);
-function closeMenu(){document.body.classList.remove('menu-open');menuButton.setAttribute('aria-expanded','false');menuButton.textContent='菜单'}
-menuButton.onclick=()=>{const opened=document.body.classList.toggle('menu-open');menuButton.setAttribute('aria-expanded',String(opened));menuButton.textContent=opened?'关闭':'菜单'};
-$('nav').addEventListener('click',closeMenu);$('.brand').addEventListener('click',closeMenu);document.addEventListener('keydown',e=>{if(e.key==='Escape')closeMenu()});
 viewport.addEventListener('keydown',e=>{if(reading())return;const d={ArrowLeft:[100,0],ArrowRight:[-100,0],ArrowUp:[0,100],ArrowDown:[0,-100]}[e.key];if(d){e.preventDefault();move(tx+d[0],ty+d[1])}});
 world.addEventListener('focusin',e=>{if(reading()||!e.target.matches(':focus-visible'))return;const r=layout[tiles.indexOf(e.target)];if(r)move(viewport.clientWidth/2-r.x-r.w/2,viewport.clientHeight/2-r.y-r.h/2,false)});
 $('#reset').onclick=reset;$('#view-toggle').onclick=()=>{list=!list;sync();window.scrollTo(0,0)};

@@ -178,18 +178,12 @@ dialog[open]{animation:detail-arrive .5s ease both}
 @keyframes detail-arrive{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
 @media(prefers-reduced-motion:reduce){*{animation:none!important}}
 
-.menu-toggle{display:none}
 @media(max-width:760px),(pointer:coarse){
- header{height:64px;padding:10px 20px;position:relative}
+ header{height:76px;padding:12px 18px;position:relative}
  .brand img{width:34px;height:34px}
  .brand span{font-size:15px;letter-spacing:1px}
  .brand small{font-size:8px;letter-spacing:1.5px}
- .menu-toggle{display:block;min-width:44px;min-height:44px;font-size:13px;z-index:7}
- header nav{display:none}
- .menu-open header nav{display:flex;position:fixed;inset:64px 0 0;background:var(--paper);padding:35px 25px;flex-direction:column;align-items:flex-start;justify-content:flex-start;gap:16px;z-index:6}
- .menu-open nav button,.menu-open nav button:first-child{display:block;font-family:"Songti SC","SimSun",serif;font-size:30px;min-height:48px}
- .menu-open{overflow:hidden}
- .explore{height:calc(100dvh - 64px);scroll-margin-top:64px}
+ .explore{height:calc(100dvh - 76px);scroll-margin-top:76px}
  .explore:not(.reading) #viewport{touch-action:none;user-select:none}
  .explore:not(.reading) .explore-toolbar{padding:0 20px;min-height:40px;position:static;justify-content:flex-end;background:transparent}
  .explore:not(.reading) .filters{display:none}
@@ -197,12 +191,12 @@ dialog[open]{animation:detail-arrive .5s ease both}
  .explore:not(.reading) .canvas-footer{min-height:36px;padding:0 20px max(8px,env(safe-area-inset-bottom));gap:12px;font-size:10px}
  .explore:not(.reading) .tile-caption{font-size:11px;padding-top:7px}
  .explore:not(.reading) .tile img{height:calc(100% - 30px)}
- .explore.reading{height:auto;min-height:calc(100dvh - 64px)}
+ .explore.reading{height:auto;min-height:calc(100dvh - 76px)}
  .reading .explore-toolbar{position:sticky;top:0;flex-wrap:wrap;gap:0 12px;padding:4px 20px}
  .reading .filters{width:auto;flex:1;gap:15px}
  .reading #view-toggle{margin-left:auto}
  .reading #world{display:block}
  .reading .tile{margin-bottom:35px}
  .reading #viewport{touch-action:pan-y}
- .home{min-height:calc(100svh - 64px)}
+ .home{min-height:calc(100svh - 76px)}
 }
