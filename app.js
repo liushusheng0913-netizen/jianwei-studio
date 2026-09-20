@@ -80,7 +80,7 @@ menuButton.onclick=()=>{const opened=document.body.classList.toggle('menu-open')
 $('nav').addEventListener('click',closeMenu);$('.brand').addEventListener('click',closeMenu);document.addEventListener('keydown',e=>{if(e.key==='Escape')closeMenu()});
 viewport.addEventListener('keydown',e=>{if(reading())return;const d={ArrowLeft:[100,0],ArrowRight:[-100,0],ArrowUp:[0,100],ArrowDown:[0,-100]}[e.key];if(d){e.preventDefault();move(tx+d[0],ty+d[1])}});
 world.addEventListener('focusin',e=>{if(reading()||!e.target.matches(':focus-visible'))return;const r=layout[tiles.indexOf(e.target)];if(r)move(viewport.clientWidth/2-r.x-r.w/2,viewport.clientHeight/2-r.y-r.h/2,false)});
-$('#reset').onclick=reset;$('#view-toggle').onclick=()=>{list=!list;sync()};
+$('#reset').onclick=reset;$('#view-toggle').onclick=()=>{list=!list;sync();window.scrollTo(0,0)};
 window.addEventListener('resize',()=>{if(!$('#explore').hidden)sync()});
 if(location.hash==='#explore')explore();
 function open(content){stop();if(!dialog.open)lastFocus=document.activeElement;$('#detail-content').innerHTML=content;if(!dialog.open)dialog.showModal();dialog.scrollTop=0;$('.close').focus()}
