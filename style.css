@@ -43,7 +43,7 @@ h1{font-weight:400;margin:0}
 .reading-intro{display:none}
 #viewport{position:relative;flex:1;min-height:0;overflow:hidden;outline-offset:-3px}
 #world{position:absolute;left:0;top:0;will-change:transform;transform-origin:0 0}
-.tile{position:absolute;padding:0;text-align:left;display:block;opacity:0;transform:scale(.92);transition:opacity .65s ease,transform .75s ease}
+.tile{position:absolute;padding:0;text-align:left;display:block;opacity:0;transform:scale(.84);transition:opacity .9s ease,transform 1.2s cubic-bezier(.2,.65,.25,1)}
 .tile.is-visible{opacity:1;transform:none}
 .tile img{display:block;width:100%;height:calc(100% - 60px);object-fit:cover;user-select:none;-webkit-user-drag:none}
 .tile[data-theme="研究实践"] img{object-fit:contain;background:#f0f1eb}
@@ -163,3 +163,17 @@ body:has(dialog[open]){overflow:hidden}
 }
 @media(max-width:350px){header{padding:10px 12px}.brand span{font-size:14px}nav{gap:10px}.filters{gap:12px}.reading #viewport{padding-left:18px;padding-right:18px}}
 @media(prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
+
+/* Free exploration keeps the approved masthead and gives the images the stage. */
+.explore:not(.reading) .explore-toolbar{order:2;min-height:48px;padding-top:0;padding-bottom:0;border:0;z-index:2}
+.explore:not(.reading) #viewport{order:1}
+.explore:not(.reading) .canvas-footer{order:3;min-height:30px;border:0;padding-bottom:8px}
+.explore:not(.reading) .canvas-footer button{min-height:30px}
+.explore:not(.reading) .tile-category{display:none}
+.explore:not(.reading) .tile-caption{font-size:13px;padding-top:10px;line-height:1.5}
+.explore:not(.reading) .tile img{height:calc(100% - 36px)}
+.explore:not(.reading) .tile[data-theme="研究实践"] img{background:transparent}
+.explore:not(.reading) .filters button{font-size:12px}
+dialog[open]{animation:detail-arrive .5s ease both}
+@keyframes detail-arrive{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
+@media(prefers-reduced-motion:reduce){*{animation:none!important}}
